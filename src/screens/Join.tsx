@@ -65,7 +65,7 @@ export default function Join() {
             className="absolute inset-0 z-10 h-full w-full opacity-0" aria-describedby="code-help" />
           <div className="flex justify-between gap-2" aria-hidden="true">
             {boxes.map((ch, i) => {
-              const active = i === Math.min(code.length, 4);
+              const active = code.length < 5 && i === code.length;
               return (
                 <span key={i} className="disp grid h-[60px] flex-1 place-items-center rounded-xl bg-white text-[30px]"
                   style={{ boxShadow: active && !peek ? 'inset 0 0 0 2.5px var(--color-brand),0 5px 0 var(--color-brand)' : 'inset 0 0 0 2px #000,0 5px 0 #000' }}>{ch}</span>

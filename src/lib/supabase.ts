@@ -22,7 +22,7 @@ export function ensureSession(): Promise<void> {
       throw new Error(
         error.message.includes('disabled')
           ? 'Anonymous sign-ins are disabled in Supabase (Authentication → Providers → Anonymous).'
-          : error.message,
+          : /fetch/i.test(error.message) ? 'Can’t reach the server. Check your connection.' : error.message,
       );
     }
   })();
