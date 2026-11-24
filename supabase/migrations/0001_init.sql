@@ -149,7 +149,7 @@ language sql security definer set search_path = public as $$
 $$;
 
 create or replace function public._new_code() returns text
-language plpgsql as $$
+language plpgsql set search_path = public as $$
 declare
   alphabet constant text := 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'; -- no 0/O/1/I/L
   c text;
@@ -165,12 +165,12 @@ begin
 end $$;
 
 create or replace function public._player_color(n int) returns text
-language sql immutable as $$
+language sql immutable set search_path = public as $$
   select (array['#E8833A','#8E7CFF','#3A8EE6','#D9609B','#B88A5E','#5C6BC0','#7D8A99','#A0679B'])[1 + (n % 8)]
 $$;
 
 create or replace function public._restaurant_color(n int) returns text
-language sql immutable as $$
+language sql immutable set search_path = public as $$
   select (array['#1F3A5F','#D9C3A0','#9C5B3B','#5B3A6B','#3F4A5A','#6B4E3D','#4A5D73','#8A6F5A'])[1 + (n % 8)]
 $$;
 
