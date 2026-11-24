@@ -1,0 +1,62 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Bricolage+Grotesque:opsz,wght@12..96,600..800&display=swap');
+@import 'tailwindcss';
+
+/* Nomi design tokens: every colour has exactly one meaning (see handoff "Design system"). */
+@theme {
+  --color-brand: #15803d;      /* Yum, ready, NEXT, selected, links, switches, progress */
+  --color-brand-dark: #11652f;
+  --color-brand-tint: #e7f3eb;
+  --color-neg: #c9291f;        /* Nope, OUT, Leave, penalties */
+  --color-neg-tint: #fbeae8;
+  --color-lime: #d4f542;       /* points chips & power-up icons, always with black */
+  --color-ink: #000000;        /* primary buttons, host tag, stars */
+  --color-bg: #f2f2f7;         /* screen background */
+  --color-surface: #ffffff;    /* cards, lists, sheets */
+  --color-sec: #6d6d72;        /* captions, section headers, hints */
+  --color-sep: #c6c6c8;
+  --color-fill: #e3e3e8;
+
+  --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter', system-ui, sans-serif;
+  --font-disp: 'Bricolage Grotesque', -apple-system, sans-serif;
+}
+
+html, body, #root { height: 100%; }
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: #000;
+  font-family: var(--font-sans);
+  letter-spacing: -0.2px;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+}
+button { cursor: pointer; font: inherit; letter-spacing: inherit; }
+button:disabled { cursor: not-allowed; }
+:focus-visible { outline: 3px solid var(--color-brand); outline-offset: 2px; }
+
+.disp { font-family: var(--font-disp); font-optical-sizing: auto; font-weight: 800; }
+
+/* Pressable edge under primary/secondary buttons and code tiles */
+.press { transition: transform 80ms ease, box-shadow 80ms ease; }
+.press:active:not(:disabled) { transform: translateY(4px); }
+.edge-ink { box-shadow: 0 5px 0 #4a4a4e; }
+.edge-ink:active:not(:disabled) { box-shadow: 0 1px 0 #4a4a4e; }
+.edge-outline { box-shadow: inset 0 0 0 2px #000, 0 5px 0 #000; }
+.edge-outline:active:not(:disabled) { box-shadow: inset 0 0 0 2px #000, 0 1px 0 #000; }
+.edge-brand { box-shadow: 0 5px 0 var(--color-brand-dark); }
+
+@keyframes bob { 0%, 100% { transform: translateY(0) } 50% { transform: translateY(-6px) } }
+.bob { animation: bob 1.6s ease-in-out infinite; }
+@keyframes pulse { 0%, 100% { transform: scale(1) } 50% { transform: scale(1.06) } }
+.pulse { animation: pulse 1s ease-in-out infinite; }
+@keyframes fall { 0% { transform: translateY(-40px) rotate(0) } 100% { transform: translateY(110vh) rotate(540deg) } }
+.conf { position: absolute; top: 0; animation: fall 3.2s linear infinite; }
+@keyframes sheet-up { from { transform: translateY(100%) } to { transform: translateY(0) } }
+.sheet-up { animation: sheet-up 260ms cubic-bezier(.2,.8,.2,1); }
+@keyframes fade-in { from { opacity: 0 } to { opacity: 1 } }
+.fade-in { animation: fade-in 200ms ease; }
+
+@media (prefers-reduced-motion: reduce) {
+  .bob, .pulse, .conf, .sheet-up, .fade-in { animation: none; }
+  .conf { display: none; }
+}
