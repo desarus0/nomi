@@ -6,7 +6,7 @@ import { Burst, Icon, Mono, PrimaryButton, PuIcon, Screen, TagNext, TagOut } fro
 // Fig. 13 – Round results: ranked Yum votes, NEXT/OUT, power-up effects, points earned. Next round starts after 5 s.
 export default function Results({ round, nextStartsAt, final }: { round: Round; nextStartsAt?: number; final?: boolean }) {
   const { state, me, now, byId, playerById, inPlay } = useParty();
-  const results = state.round_results.filter((r) => r.round_id === round.id).sort((a, b) => b.yums - a.yums || a.rank - b.rank);
+  const results = state.round_results.filter((r) => r.round_id === round.id).sort((a, b) => Number(b.advanced) - Number(a.advanced) || b.yums - a.yums || a.rank - b.rank);
   const plays = state.power_ups.filter((p) => p.round_id === round.id);
   const wildcards = state.restaurants.filter((r) => r.is_wildcard && r.wildcard_round === round.number + 1);
   const earned = state.round_points.find((p) => p.round_id === round.id && p.player_id === me.id)?.earned ?? 0;

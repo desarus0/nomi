@@ -4,6 +4,7 @@
 -- so hidden information (votes, power-up targets, pending wildcards) never leaks to clients.
 -- Each mutation bumps parties.rev, which Realtime pushes to members so they refetch.
 -- Requires: Anonymous sign-ins enabled (Authentication > Providers > Anonymous).
+-- Note: Supabase enables pg_safeupdate, so every UPDATE needs a WHERE clause (even on temp tables).
 
 
 -- ---------------------------------------------------------------- tables
@@ -356,7 +357,7 @@ begin
   where r.party_id = v_round.party_id and r.in_play;
 
   alter table _tally add column yums int;
-  update _tally set yums = case when vetoed then 0 else raw_yums end;
+  update _tally set yums = case when vetoed then 0 else raw_yums end where true;  -- pg_safeupdate needs a WHERE
 
   select count(*) into n from _tally;
   k := greatest(1, ceil(n / 2.0)::int);
@@ -364,12 +365,12 @@ begin
   -- Everyone tied at the cutoff moves on...
   select yums into cutoff from _tally order by yums desc offset (k - 1) limit 1;
   alter table _tally add column advanced boolean;
-  update _tally set advanced = (yums >= cutoff);
+  update _tally set advanced = (yums >= cutoff) where true;
   select count(*) into n_adv from _tally where advanced;
   -- ...unless that would eliminate nothing; then break ties randomly to keep exactly k.
   if n_adv >= n and n > 1 then
     update _tally t set advanced = t.restaurant_id in (
-      select restaurant_id from _tally order by yums desc, tiebreak limit k);
+      select restaurant_id from _tally order by yums desc, tiebreak limit k) where true;
   end if;
 
   insert into round_results(round_id, restaurant_id, yums, raw_yums, rank, advanced, vetoed, doubled)
