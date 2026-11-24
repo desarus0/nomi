@@ -63,6 +63,7 @@ Import the GitHub repo in Vercel (it detects Vite) and set the environment varia
 | `npm run dev` | Dev server with the `/api/places` route |
 | `npm run build` | Type-check and build to `dist/` |
 | `npm run test:db` | Runs the game-engine SQL against an in-memory Postgres (PGlite): voting, ties, veto, double vote, wildcard, timeouts, host handover, a full game to a winner, and permission checks |
+| `npm run test:e2e` | Plays a full 3-player game (create, search, join, ready, Veto, Double Vote, all rounds, winner) against the live site, or pass a URL: `npm run test:e2e -- http://localhost:5173`. Screenshots go to `e2e-shots/` |
 | `npm run lint` | oxlint |
 
 ## Project map

@@ -32,3 +32,4 @@ dist-ssr
 # Design source (shared privately, not part of the app)
 nomi_design_source/
 *.zip
+e2e-shots/
