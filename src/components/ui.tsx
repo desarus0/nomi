@@ -304,12 +304,19 @@ export function Screen({ children, footer, bg = 'bg-bg', className = '' }: { chi
 /** Bottom sheet over the current screen (Details, Power-ups, Veto, Wildcard). */
 export function Sheet({ onClose, children, label }: { onClose: () => void; children: ReactNode; label: string }) {
   const ref = useRef<HTMLDivElement>(null);
+  // Parents (e.g. the voting screen) re-render several times a second for timers, which hands us a
+  // new onClose each time. Keep it in a ref so the effects below run once, and only move focus into
+  // the sheet on open; never steal it back from an input inside the sheet.
+  const close = useRef(onClose);
+  close.current = onClose;
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') close.current(); };
     document.addEventListener('keydown', onKey);
-    ref.current?.focus();
     return () => document.removeEventListener('keydown', onKey);
-  }, [onClose]);
+  }, []);
+  useEffect(() => {
+    if (!ref.current?.contains(document.activeElement)) ref.current?.focus();
+  }, []);
   return (
     <div className="fixed inset-0 z-40 flex justify-center">
       <div className="fade-in absolute inset-0 bg-black/40" onClick={onClose} aria-hidden="true" />

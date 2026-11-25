@@ -118,7 +118,24 @@ const marcusStrat = {
     log('Marcus played Double Vote');
   },
 };
-const kevinStrat = { vote: () => (Math.random() < 0.5 ? 'Yum' : 'Nope') };
+const kevinStrat = {
+  vote: () => (Math.random() < 0.5 ? 'Yum' : 'Nope'),
+  async onRound(p, r) {
+    if (r !== 1) return;
+    await p.getByRole('button', { name: 'Power-up' }).click();
+    await p.getByRole('radio', { name: /Wildcard/ }).click();
+    await p.getByRole('button', { name: 'Next: Choose a Target' }).click();
+    // Type key by key (not fill): timers re-render the screen and must not steal focus from the input.
+    await p.getByPlaceholder('Search for a new restaurant').click();
+    await p.keyboard.type('ramen', { delay: 120 });
+    const input = await p.getByPlaceholder('Search for a new restaurant').inputValue();
+    if (input !== 'ramen') throw new Error(`Wildcard search lost keystrokes: "${input}"`);
+    await p.getByRole('dialog').locator('button').filter({ hasText: /·/ }).first().click({ timeout: 15000 });
+    await p.getByRole('button', { name: /^Add .* 35 pts$/ }).click();
+    await p.getByRole('dialog').waitFor({ state: 'detached', timeout: 8000 });
+    log('Kevin played Wildcard');
+  },
+};
 
 await Promise.all([play(host, 'Kevin', kevinStrat), play(kelly, 'Kelly', kellyStrat), play(marcus, 'Marcus', marcusStrat)]);
 await host.waitForTimeout(1500);
