@@ -8,7 +8,11 @@ await db.exec(`
   create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('app.uid', true),'')::uuid $$;
   create publication supabase_realtime;
 `);
-try { await db.exec(fs.readFileSync(new URL("../migrations/0001_init.sql", import.meta.url), "utf8")); } catch (e) { console.log("MIGRATION ERROR:", e.message, e.where ?? "", e.position ?? ""); process.exit(1); }
+const migDir = new URL('../migrations/', import.meta.url);
+for (const f of fs.readdirSync(migDir).filter((f) => f.endsWith('.sql')).sort()) {
+  try { await db.exec(fs.readFileSync(new URL(f, migDir), 'utf8')); }
+  catch (e) { console.log('MIGRATION ERROR in', f, e.message, e.where ?? ''); process.exit(1); }
+}
 process.on("unhandledRejection", e => { console.log("FAIL:", e.message, e.where ?? ""); process.exit(1); });
 
 const U = { host: '00000000-0000-0000-0000-000000000001', kelly: '00000000-0000-0000-0000-000000000002', marcus: '00000000-0000-0000-0000-000000000003' };
@@ -33,7 +37,17 @@ const names = ['Golden Lotus Pho', 'Taqueria El Sol', 'Bao Down', 'Slice Society
 await expectErr(as('host', `select start_voting($1)`, [pid]), 'start with <4 restaurants');
 const rid = {};
 for (const [i, n] of names.entries()) {
-  rid[n] = await as(i % 2 ? 'kelly' : 'host', `select add_restaurant($1,$2)`, [pid, { place_id: 'p' + i, name: n, cuisine: 'X', price_level: 2 }]);
+  const photos = i === 0 ? [
+    { name: 'places/abc/photos/p1', attribution: 'Ann' }, { name: 'bad name', attribution: 'x' },
+    { name: 'places/abc/photos/p2', attribution: null }, { name: 'places/abc/photos/p3' }, { name: 'places/abc/photos/p4' },
+  ] : undefined;
+  rid[n] = await as(i % 2 ? 'kelly' : 'host', `select add_restaurant($1,$2)`, [pid, { place_id: 'p' + i, name: n, cuisine: 'X', price_level: 2, photos }]);
+}
+{
+  const s0 = await as('host', `select get_state($1)`, [pid]);
+  const ph = s0.restaurants.find((r) => r.name === names[0]).photos;
+  assert(ph.length === 2 && ph[0].name === 'places/abc/photos/p1' && ph[0].attribution === 'Ann', 'photos: keeps valid refs from the first 3, drops malformed: ' + JSON.stringify(ph));
+  assert(s0.restaurants.find((r) => r.name === names[1]).photos === null, 'photos: null when none given');
 }
 await expectErr(as('host', `select add_restaurant($1,$2)`, [pid, { place_id: 'p0', name: 'dup' }]), 'duplicate restaurant');
 await expectErr(as('kelly', `select start_voting($1)`, [pid]), 'non-host start');

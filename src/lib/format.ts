@@ -73,3 +73,6 @@ export function shuffleFor<T extends { id: string }>(items: T[], seed: string): 
   const h = (s: string) => { let x = 2166136261; for (const c of s) { x ^= c.charCodeAt(0); x = Math.imul(x, 16777619); } return x >>> 0; };
   return [...items].sort((a, b) => h(seed + a.id) - h(seed + b.id));
 }
+
+/** Same-origin URL for a Places photo (our /api/photo proxy keeps the API key server-side). */
+export const photoSrc = (name: string, width = 800) => `/api/photo?name=${encodeURIComponent(name)}&w=${width}`;

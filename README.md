@@ -13,6 +13,7 @@ This is the **Level 1 prototype** (FR01–FR05, FR13): a mobile-first web app fo
 - **Hidden info stays hidden.** Tables have RLS with no direct read access. Clients read through `get_state()`, which hides other players' votes, power-up targets and pending Wildcards until the round results.
 - **Live updates.** Every change bumps `parties.rev`. Clients subscribe to that row with Supabase Realtime and refetch, with polling as a fallback.
 - **Timers.** Rounds have a server deadline (`time per card × cards`). When it passes, any client calls `tick()`, and the server resolves the round if it's due.
+- **Photos** come from Google Places. Up to 3 photo references are saved with each restaurant, and `/api/photo` redirects to Google's image URL, so the key stays server-side and Vercel's CDN caches the redirect. Cards fall back to the colour tile when there's no photo. The photographer credit Google requires is shown on every photo.
 - **Restaurant search** calls `/api/places`. Locally that route is served by Vite; in production it's a Vercel function (`api/places.ts`). The Google key never reaches the browser. Without a key, it returns built-in sample restaurants.
 
 ### Rules decided for the open questions in the handoff
@@ -69,7 +70,8 @@ Import the GitHub repo in Vercel (it detects Vite) and set the environment varia
 ## Project map
 
 ```
-api/places.ts               Vercel function → Google Places
+api/places.ts               Vercel function → Google Places search
+api/photo.ts                Vercel function → Google Places photo (redirect)
 server/places.ts            Places search + sample data (shared with the dev server)
 supabase/migrations/        Schema, RLS and game RPCs
 supabase/tests/             Game-engine tests (PGlite)
@@ -84,4 +86,4 @@ Colours have exactly one meaning each (tokens in `src/index.css`): brand green `
 
 ## Out of scope (Level 2/3)
 
-Accounts, dining history, rejoining the last party, saved lists, friends, Shield/Decoy power-ups, "Suggest nearby", recommendations, deals, and Places photos (the Details screen shows a placeholder).
+Accounts, dining history, rejoining the last party, saved lists, friends, Shield/Decoy power-ups, "Suggest nearby", recommendations, deals.

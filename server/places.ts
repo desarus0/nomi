@@ -16,12 +16,14 @@ export interface PlaceResult {
   hours: { weekday: string[] } | null; // Monday-first descriptions, as Google returns them
   maps_uri: string | null;
   summary: string | null;
+  /** Up to 3 Google photo resource names (places/X/photos/Y) with the required author credit. */
+  photos: { name: string; attribution: string | null }[] | null;
 }
 
 const FIELDS = [
   'id', 'displayName', 'primaryTypeDisplayName', 'priceLevel', 'location', 'shortFormattedAddress',
   'formattedAddress', 'rating', 'userRatingCount', 'nationalPhoneNumber', 'regularOpeningHours',
-  'googleMapsUri', 'editorialSummary',
+  'googleMapsUri', 'editorialSummary', 'photos',
 ].map((f) => `places.${f}`).join(',');
 
 const PRICE: Record<string, number> = {
@@ -43,6 +45,7 @@ interface GooglePlace {
   regularOpeningHours?: { weekdayDescriptions?: string[] };
   googleMapsUri?: string;
   editorialSummary?: { text: string };
+  photos?: { name: string; authorAttributions?: { displayName?: string }[] }[];
 }
 
 export async function searchPlaces(
@@ -77,6 +80,9 @@ export async function searchPlaces(
     hours: p.regularOpeningHours?.weekdayDescriptions ? { weekday: p.regularOpeningHours.weekdayDescriptions } : null,
     maps_uri: p.googleMapsUri ?? null,
     summary: p.editorialSummary?.text ?? null,
+    photos: p.photos?.length
+      ? p.photos.slice(0, 3).map((ph) => ({ name: ph.name, attribution: ph.authorAttributions?.[0]?.displayName ?? null }))
+      : null,
   }));
 }
 
@@ -117,6 +123,25 @@ function mockSearch(q: string, lat: number | null, lng: number | null): PlaceRes
           .map((d) => `${d}: 11:00 AM – ${i % 2 ? '10:00' : '9:30'} PM`) },
         maps_uri: null,
         summary: `Sample ${cuisine.toLowerCase()} spot (add a Google Places key for real data).`,
+        photos: null,
       };
     });
+}
+
+// ------------------------------------------------------------------ photos
+const PHOTO_NAME = /^places\/[A-Za-z0-9_-]+\/photos\/[A-Za-z0-9_-]+$/;
+
+/**
+ * Resolves a Places photo resource name to a short-lived public image URL (no API key in it),
+ * so the browser can load the image directly without ever seeing our key.
+ */
+export async function photoUrl(name: string, width: number, apiKey: string | undefined): Promise<string | null> {
+  if (!apiKey || !PHOTO_NAME.test(name)) return null;
+  const w = Math.min(1600, Math.max(100, Math.round(width) || 800));
+  const res = await fetch(`https://places.googleapis.com/v1/${name}/media?maxWidthPx=${w}&skipHttpRedirect=true`, {
+    headers: { 'X-Goog-Api-Key': apiKey },
+  });
+  if (!res.ok) throw new Error(`Places photo ${res.status}: ${(await res.text()).slice(0, 200)}`);
+  const data = (await res.json()) as { photoUri?: string };
+  return data.photoUri ?? null;
 }

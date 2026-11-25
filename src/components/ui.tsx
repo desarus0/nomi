@@ -1,6 +1,7 @@
-import { useEffect, useRef, type ButtonHTMLAttributes, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ButtonHTMLAttributes, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import { initials, onColor } from '../lib/format';
+import { initials, onColor, photoSrc } from '../lib/format';
+import type { Photo } from '../lib/types';
 
 // ------------------------------------------------------------------ icons (from design source I{})
 const I = {
@@ -98,6 +99,31 @@ export function Mono({ name, color, size = 40, radius = 10, fontSize = 15 }: { n
     </div>
   );
 }
+
+/**
+ * Restaurant photo filling its (relative) parent, with scrims so white text stays readable
+ * and the photographer credit Google requires. Renders nothing if there's no photo or it fails,
+ * leaving the parent's identity colour showing.
+ */
+export function PhotoBackdrop({ photo, width = 800, onLoadState }: { photo: Photo | null | undefined; width?: number; onLoadState?: (ok: boolean) => void }) {
+  const [failed, setFailed] = useState(false);
+  if (!photo || failed) return null;
+  return (
+    <>
+      <img src={photoSrc(photo.name, width)} alt="" aria-hidden="true" draggable={false} decoding="async"
+        onLoad={() => onLoadState?.(true)} onError={() => { setFailed(true); onLoadState?.(false); }}
+        className="pointer-events-none absolute inset-0 h-full w-full object-cover select-none" />
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0"
+        style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0) 28%, rgba(0,0,0,0) 45%, rgba(0,0,0,0.78) 100%)' }} />
+      {photo.attribution && (
+        <span className="pointer-events-none absolute right-2.5 bottom-1.5 z-10 max-w-[70%] truncate text-[10px] text-white/80">Photo: {photo.attribution}</span>
+      )}
+    </>
+  );
+}
+
+/** Text colour for content over a restaurant tile: white over photos, otherwise contrast with the tile colour. */
+export const heroText = (color: string, hasPhoto: boolean) => (hasPhoto ? '#FFFFFF' : onColor(color));
 
 // ------------------------------------------------------------------ buttons
 type BtnProps = ButtonHTMLAttributes<HTMLButtonElement> & { icon?: IconName };

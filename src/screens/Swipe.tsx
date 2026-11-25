@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState, type PointerEvent as RPointerEvent, type ReactNode } from 'react';
 import { api } from '../lib/api';
-import { fmtMiles, distanceMiles, price, roundsFor, shuffleFor, todayHours, onColor } from '../lib/format';
+import { fmtMiles, distanceMiles, photoSrc, price, roundsFor, shuffleFor, todayHours } from '../lib/format';
 import { useParty } from '../lib/party';
 import type { Choice, Restaurant } from '../lib/types';
-import { Avatar, ErrorText, Icon, Points, RingTimer, Stamp } from '../components/ui';
+import { Avatar, ErrorText, Icon, PhotoBackdrop, Points, RingTimer, Stamp, heroText } from '../components/ui';
 import { DetailsSheet } from './sheets/DetailsSheet';
 import { PowerUpSheet } from './sheets/PowerUpSheet';
 
@@ -97,6 +97,8 @@ export default function Swipe() {
         ) : (
           <div className="grid h-full place-items-center text-sec">Sending your votes…</div>
         )}
+        {/* Warm the cache for the next card's photo so it appears instantly */}
+        {remaining[1]?.photos?.[0] && <img src={photoSrc(remaining[1].photos[0].name, 800)} alt="" aria-hidden="true" className="hidden" />}
       </div>
 
       <div className="flex flex-none items-start justify-center gap-9 pt-4" style={{ paddingBottom: 'max(18px, env(safe-area-inset-bottom))' }}>
@@ -132,7 +134,8 @@ function Card({ r, onVote, onDetails, fly, meta }: {
   const [dx, setDx] = useState(0);
   const [dragging, setDragging] = useState(false);
   const start = useRef<{ x: number; y: number; id: number } | null>(null);
-  const fg = onColor(r.color);
+  const [photoOk, setPhotoOk] = useState(Boolean(r.photos?.[0]));
+  const fg = heroText(r.color, photoOk);
 
   const down = (e: RPointerEvent) => {
     if ((e.target as HTMLElement).closest('button')) return;
@@ -155,14 +158,15 @@ function Card({ r, onVote, onDetails, fly, meta }: {
       onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={() => { start.current = null; setDragging(false); setDx(0); }}
       className="absolute inset-0 flex touch-none flex-col overflow-hidden rounded-3xl bg-white shadow-[0_18px_40px_rgba(0,0,0,0.18)] select-none"
       style={{ transform: `translateX(${x}px) rotate(${tilt}deg)`, transition: dragging ? 'none' : 'transform 200ms ease' }}>
-      <div className="relative flex min-h-0 flex-1 flex-col justify-between p-[18px]" style={{ background: r.color, color: fg }}>
-        <div className="flex items-center justify-between">
+      <div className="relative flex min-h-0 flex-1 flex-col justify-between overflow-hidden p-[18px]" style={{ background: r.color, color: fg }}>
+        <PhotoBackdrop photo={r.photos?.[0]} width={800} onLoadState={setPhotoOk} />
+        <div className="relative flex items-center justify-between">
           <span className="text-[13px] font-semibold tracking-[0.2px] opacity-85">{(r.cuisine ?? 'Restaurant').toUpperCase()}{r.price_level ? ` · ${price(r.price_level)}` : ''}</span>
           <button onClick={onDetails} className="flex min-h-11 items-center gap-1 rounded-full px-3 text-[13px] font-semibold" style={{ color: fg }}>
             <span className="flex items-center gap-1 rounded-full px-2.5 py-1" style={{ background: fg === '#FFFFFF' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)' }}><Icon name="info" size={14} sw={2.2} />Details</span>
           </button>
         </div>
-        <div className="disp text-[clamp(34px,11vw,52px)] leading-[0.95] tracking-[-1.6px] break-words">{r.name}</div>
+        <div className="disp relative text-[clamp(34px,11vw,52px)] leading-[0.95] tracking-[-1.6px] break-words" style={photoOk ? { textShadow: '0 2px 12px rgba(0,0,0,0.35)' } : undefined}>{r.name}</div>
         <div className="pointer-events-none absolute top-14 left-5" style={{ opacity: Math.min(1, Math.max(0, x / 90)) }}><Stamp text="YUM" color="var(--color-brand)" rot={-14} /></div>
         <div className="pointer-events-none absolute top-14 right-5" style={{ opacity: Math.min(1, Math.max(0, -x / 90)) }}><Stamp text="NOPE" color="var(--color-neg)" rot={14} /></div>
       </div>

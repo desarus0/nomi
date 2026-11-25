@@ -1,7 +1,8 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { directionsUrl, distanceMiles, fmtMiles, price, travel, onColor } from '../lib/format';
+import { directionsUrl, distanceMiles, fmtMiles, price, travel } from '../lib/format';
 import { useParty } from '../lib/party';
-import { Avatar, Icon, Points, PrimaryButton, Screen } from '../components/ui';
+import { Avatar, Icon, PhotoBackdrop, Points, PrimaryButton, Screen, heroText } from '../components/ui';
 
 // Fig. 14 – Winner: winning restaurant with Directions and Call, final points podium.
 const CONFETTI = ['#15803D', '#D4F542', '#8E7CFF', '#3A8EE6', '#D9609B', '#E8833A', '#000'];
@@ -16,7 +17,8 @@ export default function Winner() {
   const podium = [...players].sort((a, b) => b.points - a.points).slice(0, 3);
   const mi = r ? distanceMiles(party, r) : null;
   const walk = travel(mi)?.walk;
-  const fg = r ? onColor(r.color) : '#fff';
+  const [photoOk, setPhotoOk] = useState(Boolean(r?.photos?.[0]));
+  const fg = r ? heroText(r.color, photoOk) : '#fff';
 
   // Podium order on screen: 2nd, 1st, 3rd
   const order = [podium[1], podium[0], podium[2]];
@@ -36,12 +38,13 @@ export default function Winner() {
 
       {r && (
         <div className="relative mx-4 mt-4 overflow-hidden rounded-[22px] bg-white edge-outline">
-          <div className="px-5 pt-4 pb-5" style={{ background: r.color, color: fg }}>
-            <div className="flex items-center justify-between">
+          <div className={`relative flex flex-col overflow-hidden px-5 pt-4 pb-5 ${photoOk ? 'min-h-[200px]' : ''}`} style={{ background: r.color, color: fg }}>
+            <PhotoBackdrop photo={r.photos?.[0]} width={1000} onLoadState={setPhotoOk} />
+            <div className="relative flex items-center justify-between">
               <span className="text-[13px] font-semibold tracking-[0.2px] opacity-85">{(r.cuisine ?? 'Restaurant').toUpperCase()}{r.price_level ? ` · ${price(r.price_level)}` : ''}</span>
               <span className="flex items-center gap-1 rounded-full bg-black px-2.5 py-1 text-[11px] font-extrabold tracking-[0.5px] text-white"><Icon name="trophy" size={13} color="#fff" sw={2.2} />WINNER</span>
             </div>
-            <h2 className="disp mt-6 mb-0 text-[36px] leading-[1] tracking-[-1.2px]">{r.name}</h2>
+            <h2 className="disp relative mt-auto mb-0 pt-6 text-[36px] leading-[1] tracking-[-1.2px]" style={photoOk ? { textShadow: '0 2px 12px rgba(0,0,0,0.35)' } : undefined}>{r.name}</h2>
           </div>
           <div className="px-4 pt-3 pb-4">
             <p className="m-0 flex flex-wrap items-center gap-1 text-[15px]">

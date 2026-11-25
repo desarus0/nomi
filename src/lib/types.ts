@@ -47,6 +47,7 @@ export interface Restaurant {
   hours: { weekday: string[] } | null;
   maps_uri: string | null;
   summary: string | null;
+  photos: Photo[] | null;
   color: string;
   added_by: string | null;
   in_play: boolean;
@@ -115,7 +116,11 @@ export interface PlaceResult {
   hours: { weekday: string[] } | null;
   maps_uri: string | null;
   summary: string | null;
+  photos: Photo[] | null;
 }
+
+/** A Google Places photo reference; served via /api/photo. Credit must be shown with the image. */
+export interface Photo { name: string; attribution: string | null }
 
 export const POWER_UPS: Record<PowerUpKind, { name: string; cost: number; effect: string; icon: 'veto' | 'double' | 'sparkle' }> = {
   veto: { name: 'Veto', cost: 40, effect: 'Cancel all Yum votes on one restaurant this round.', icon: 'veto' },

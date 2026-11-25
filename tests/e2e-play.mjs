@@ -92,6 +92,12 @@ const kellyStrat = {
   vote: (c) => (/Pho|pho/.test(c) ? 'Yum' : Math.random() < 0.5 ? 'Yum' : 'Nope'),
   async onRound(p, r) {
     if (r !== 1) return;
+    await p.waitForTimeout(800); // let the card photo load
+    await shot(p, '06-swipe');
+    await p.getByRole('button', { name: 'Details' }).click();
+    await p.waitForTimeout(1200);
+    await shot(p, '06b-details');
+    await p.getByRole('dialog').getByRole('button', { name: 'Close' }).first().click();
     await p.getByRole('button', { name: 'Power-up' }).click();
     await shot(p, '07-powerups');
     await p.getByRole('radio', { name: /Veto/ }).click();
